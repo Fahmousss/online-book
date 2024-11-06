@@ -38,6 +38,7 @@ class AuthorResource extends Resource
                     ])
                     ->schema([
                         TextInput::make('name')
+                            ->required()
                             ->autocomplete(false)
                             ->columnSpan([
                                 'sm' => 2,
@@ -60,7 +61,7 @@ class AuthorResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name'),
+                TextColumn::make('name')->searchable(),
                 TextColumn::make('date_of_birth')->label("Birth")->date(),
                 TextColumn::make('books.title')
                     ->listWithLineBreaks()
@@ -72,11 +73,10 @@ class AuthorResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                //
             ]);
     }
 
@@ -91,8 +91,8 @@ class AuthorResource extends Resource
     {
         return [
             'index' => Pages\ListAuthors::route('/'),
-            'create' => Pages\CreateAuthor::route('/create'),
-            'edit' => Pages\EditAuthor::route('/{record}/edit'),
+            // 'create' => Pages\CreateAuthor::route('/create'),
+            // 'edit' => Pages\EditAuthor::route('/{record}/edit'),
         ];
     }
 }
