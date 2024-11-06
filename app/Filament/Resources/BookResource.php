@@ -79,6 +79,8 @@ class BookResource extends Resource
                                         ->label('Category')
                                         ->relationship('category', 'name')
                                         ->required()
+                                        ->multiple()
+                                        ->preload()
                                         ->searchable(),
                                 ])->columnSpan(5),
                         ]),
