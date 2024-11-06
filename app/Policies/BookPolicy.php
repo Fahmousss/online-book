@@ -13,7 +13,7 @@ class BookPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasRole('admin');
+        return true;
     }
 
     /**
@@ -21,7 +21,7 @@ class BookPolicy
      */
     public function view(User $user, Book $book): bool
     {
-        return !$user->hasRole('admin');
+        return true;
     }
 
     /**
