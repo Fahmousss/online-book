@@ -5,10 +5,15 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AuthorResource\Pages;
 use App\Filament\Resources\AuthorResource\RelationManagers;
 use App\Models\Author;
+use App\Models\Book;
 use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -17,13 +22,37 @@ class AuthorResource extends Resource
 {
     protected static ?string $model = Author::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-user';
+    protected static ?string $navigationGroup = 'Books';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                //
+                Section::make('Details')
+                    ->columns([
+                        'sm' => 3,
+                        'xl' => 6,
+                        '2xl' => 8,
+                    ])
+                    ->schema([
+                        TextInput::make('name')
+                            ->autocomplete(false)
+                            ->columnSpan([
+                                'sm' => 2,
+                                'xl' => 3,
+                                '2xl' => 4,
+                            ]),
+                        DatePicker::make('date_of_birth')
+                            ->native(false)
+                            ->closeOnDateSelection()
+                            ->columnSpan([
+                                'sm' => 2,
+                                'xl' => 3,
+                                '2xl' => 4,
+                            ]),
+                    ])
             ]);
     }
 
@@ -31,7 +60,9 @@ class AuthorResource extends Resource
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('name'),
+                TextColumn::make('date_of_birth')->label("Birth"),
+                TextColumn::make('books.title')
             ])
             ->filters([
                 //

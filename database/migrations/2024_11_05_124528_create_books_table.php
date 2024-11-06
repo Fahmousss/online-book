@@ -21,7 +21,7 @@ return new class extends Migration
             $table->integer('stock')->default(0)->index();
             $table->decimal('price', 10, 2);
             $table->date('published_date')->nullable();
-            $table->json('images')->nullable();
+            $table->string('images')->nullable();
             $table->boolean('is_featured')->default(false);
             $table->timestamps();
             $table->softDeletes();
