@@ -75,9 +75,9 @@ class BookResource extends Resource
                                         ->relationship('author', 'name')
                                         ->required()
                                         ->searchable(),
-                                    Select::make('category_id')
-                                        ->label('Category')
-                                        ->relationship('category', 'name')
+                                    Select::make('categories')
+                                        ->label('Categories')
+                                        ->relationship('categories', 'name')
                                         ->required()
                                         ->multiple()
                                         ->preload()
@@ -128,117 +128,57 @@ class BookResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            // ->columns([
-            //     ImageColumn::make('images')->grow(false),
-            //     TextColumn::make('title')
-            //         ->label('Title')
-            //         ->searchable()  // Allow searching by title
-            //         ->sortable(),   // Enable sorting by title
-
-
-            //     TextColumn::make('description'),
-            //     TextColumn::make('author.name')
-            //         ->label('Author')
-            //         ->sortable()
-            //         ->searchable(),
-
-            //     TextColumn::make('category.name')
-            //         ->label('Category')
-            //         ->sortable()
-            //         ->searchable(),
-
-            //     TextColumn::make('price')
-            //         ->label('Price')
-            //         ->money('') // Format as currency
-            //         ->sortable(),
-
-            //     TextColumn::make('stock')
-            //         ->label('Stock')
-            //         ->sortable()
-            //         ->numeric(),
-
-            //     ToggleColumn::make('is_featured')
-            //         ->label('Featured'),
-
-            //     TextColumn::make('published_date')
-            //         ->label('Published Date')
-            //         ->date('F j, Y') // Format date as "Month Day, Year"
-            //         ->sortable(),
-
-
-            // ])
             ->columns([
-                Tables\Columns\Layout\Split::make([
-                    Tables\Columns\Layout\Grid::make()
-                        ->schema([
-                            Tables\Columns\Layout\Grid::make()
-                                ->schema([
-                                    ImageColumn::make('images')
-                                        ->height('200px')
-                                        ->extraAttributes([
-                                            'style' => app()->getLocale() == 'ar' ? 'margin:-12px -16px 0px -40px w-full' : 'margin:-12px -40px 0px -16px w-full',
-                                        ])
-                                        ->extraImgAttributes([
-                                            'class' => 'object-cover h-fit rounded-xl w-full',
-                                        ]),
-                                ])
-                                ->columns(1),
+                Tables\Columns\Layout\Stack::make([
+                    ImageColumn::make('images')
+                        ->height(200)
+                        ->extraImgAttributes([
+                            'class' => 'object-cover w-full h-[200px] rounded-xl',
+                        ]),
 
-                            Tables\Columns\Layout\Grid::make()
-                                ->schema([
-                                    Tables\Columns\TextColumn::make('title')
-                                        ->searchable()
-                                        ->extraAttributes([
-                                            'class' => 'text-gray-500 dark:text-gray-300 font-bold text-xs'
-                                        ])
-                                        ->columnSpan(2),
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('title')
+                            ->searchable()
+                            ->weight('bold')
+                            ->size('md'),
 
-                                    Tables\Columns\TextColumn::make('published_date')
-                                        ->sinceTooltip()
-                                        ->sortable()
-                                        ->extraAttributes([
-                                            'class' => 'text-gray-500 dark:text-gray-300 text-xs'
-                                        ])
-                                        ->alignEnd(),
-                                ])
-                                ->extraAttributes([
-                                    'class' => 'mt-2 -mr-6 rtl:-ml-6 rtl:mr-0'
-                                ])
-                                ->columns(3),
+                        Split::make([
+                            Tables\Columns\TextColumn::make('author.name')
+                                ->size('xs')
+                                ->grow(),
+                            Tables\Columns\TextColumn::make('published_date')
+                                ->date()
+                                ->sinceTooltip()
+                                ->sortable()
+                                ->size('xs')
+                                ->alignEnd()
 
-                            Tables\Columns\Layout\Grid::make()
-                                ->schema([
-                                    Tables\Columns\TextColumn::make('author.name')
-                                        ->extraAttributes([
-                                            'class' => 'text-gray-500 dark:text-gray-300 text-xs'
-                                        ])
-                                        ->alignEnd(),
-                                ])
-                                ->extraAttributes([
-                                    'class' => '-mr-6 rtl:-ml-6 rtl:mr-0'
-                                ])
-                                ->columns(1),
-
-                            Tables\Columns\Layout\Grid::make()
-                                ->schema([
-                                    Tables\Columns\TextColumn::make('description')
-                                        ->extraAttributes([
-                                            'class' => 'text-gray-700 dark:text-gray-300 text-xs'
-                                        ])
-                                        ->alignJustify(),
-                                ])
-                                ->columns(1)
-                                ->extraAttributes([
-                                    'class' => 'mb-3 -mr-6 rtl:-ml-6 rtl:mr-0'
-                                ]),
-                        ])
-                        ->columns(1),
+                        ]),
+                        Tables\Columns\TextColumn::make('categories.name')
+                            ->badge()
+                            ->color('success')
+                            ->separator(',')
+                            ->size('xs'),
+                        Tables\Columns\TextColumn::make('description')
+                            ->size('sm')
+                            ->lineClamp(3),
+                        Tables\Columns\TextColumn::make('deleted_at')
+                            ->dateTime()
+                            ->sortable()
+                            ->color('danger')
+                            ->size('xs')
+                            ->placeholder('Not deleted')
+                    ])
+                        ->space(2)
+                        ->extraAttributes([
+                            'class' => 'py-4'
+                        ]),
                 ]),
             ])
             ->defaultSort('published_date', 'desc')
             ->contentGrid([
                 'md' => 2,
-                'xl' => 4,
+                'xl' => 3,
                 '2xl' => 5,
             ])
             ->filters([
@@ -246,14 +186,17 @@ class BookResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
+                Tables\Actions\RestoreAction::make(),
             ]);
+        // ->bulkActions([
+        //     Tables\Actions\BulkActionGroup::make([
+        //         Tables\Actions\DeleteBulkAction::make(),
+        //         Tables\Actions\ForceDeleteBulkAction::make(),
+        //         Tables\Actions\RestoreBulkAction::make(),
+        //     ]),
+        // ]);
     }
     public static function getEloquentQuery(): Builder
     {

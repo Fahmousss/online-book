@@ -20,6 +20,6 @@ class Category extends Model
     // Relationship with Books
     public function books()
     {
-        return $this->hasMany(Book::class);
+        return $this->belongsToMany(Book::class);
     }
 }
