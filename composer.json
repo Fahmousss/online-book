@@ -9,8 +9,10 @@
         "filament/filament": "^3.2",
         "inertiajs/inertia-laravel": "^1.0",
         "laravel/framework": "^11.9",
+        "laravel/reverb": "^1.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
+        "pusher/pusher-php-server": "^7.2",
         "spatie/laravel-permission": "^6.10",
         "tightenco/ziggy": "^2.0"
     },

@@ -1,6 +1,6 @@
 import { PageProps } from "@/types";
 import { Head, Link } from "@inertiajs/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Author {
     id: number;
@@ -9,6 +9,7 @@ interface Author {
 }
 
 interface Book {
+    id: number;
     title: string;
     slug: string;
     description: string;
@@ -18,8 +19,52 @@ interface Book {
     published_date: string;
 }
 
-export default function Welcome({ auth, books }: PageProps<{ books: Book[] }>) {
+export default function Welcome({
+    auth,
+    books: initialBooks,
+}: PageProps<{ books: Book[] }>) {
     const [searchQuery, setSearchQuery] = useState("");
+    const [books, setBooks] = useState(initialBooks);
+
+    useEffect(() => {
+        console.log("Setting up Echo listener");
+
+        // Verify Echo is available
+        if (typeof window.Echo === "undefined") {
+            console.error("Echo is not initialized");
+            return;
+        }
+
+        const channel = window.Echo.channel("books");
+
+        // Add connection status logging
+        channel
+            .subscribed(() => {
+                console.log("Successfully subscribed to books channel");
+            })
+            .error((error: any) => {
+                console.error("Echo connection error:", error);
+            });
+
+        channel.listen("BookCreated", (e: { book: Book }) => {
+            console.log("Received new book:", e.book);
+            setBooks((currentBooks) => [...currentBooks, e.book]);
+        });
+
+        channel.listen("BookUpdated", (e: { book: Book }) => {
+            console.log("Received updated book:", e.book);
+            setBooks((currentBooks) =>
+                currentBooks.map((book) =>
+                    book.id === e.book.id ? e.book : book
+                )
+            );
+        });
+
+        return () => {
+            console.log("Cleaning up Echo listener");
+            window.Echo.leave("books");
+        };
+    }, []);
 
     const filteredBooks = books?.filter(
         (book) =>
