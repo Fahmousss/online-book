@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Models\Book;
+use App\Models\User;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -10,9 +12,18 @@ Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
-        'books' => Book::with('author')->get(),
+        'isAdmin' => Auth::check() && Auth::user()->roles->pluck('name')->contains('admin'),
+        'books' => [
+            'data' => Book::with('author')->get(),
+            'current_page' => 1,
+            'last_page' => 1,
+            'per_page' => 9,
+            'total' => Book::count(),
+        ],
     ]);
-});
+})->name('home');
+
+
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
