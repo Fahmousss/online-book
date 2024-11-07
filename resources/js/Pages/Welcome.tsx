@@ -1,5 +1,6 @@
 import { PageProps } from "@/types";
 import { Head, Link } from "@inertiajs/react";
+import { useState } from "react";
 
 interface Author {
     id: number;
@@ -18,6 +19,14 @@ interface Book {
 }
 
 export default function Welcome({ auth, books }: PageProps<{ books: Book[] }>) {
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const filteredBooks = books?.filter(
+        (book) =>
+            book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            book.author?.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <>
             <Head title="Welcome" />
@@ -53,8 +62,20 @@ export default function Welcome({ auth, books }: PageProps<{ books: Book[] }>) {
                         </header>
 
                         <main className="mt-6">
-                            <div className="grid grid-cols-3 gap-6 ">
-                                {books?.map((book) => (
+                            <div className="mb-6">
+                                <input
+                                    type="text"
+                                    placeholder="Search books or authors..."
+                                    value={searchQuery}
+                                    onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                    }
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF2D20] dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-6">
+                                {filteredBooks?.map((book) => (
                                     <div
                                         key={book.slug}
                                         className="overflow-hidden transition-all bg-white rounded-lg shadow-md hover:shadow-lg dark:bg-gray-800"
