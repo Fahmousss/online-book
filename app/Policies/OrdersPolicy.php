@@ -53,12 +53,12 @@ class OrdersPolicy
     public function update(User $user, Orders $orders): bool
     {
         // Check if order belongs to user
-        if ($user->id !== $orders->user_id) {
+        if ($user->id !== $orders->user_id && !$user->hasRole('admin')) {
             return false;
         }
 
         // Check if order is still pending
-        if ($orders->status !== 'cart') {
+        if ($orders->status !== 'cart' && $orders->status !== 'pending') {
             return false;
         }
 
@@ -77,12 +77,12 @@ class OrdersPolicy
         }
 
         // Check if order is still pending
-        if ($orders->status != 'cart') {
+        if ($orders->status !== 'cart') {
             return false;
         }
 
         // Check if order is less than 1 hour old
-        return $orders->created_at->diffIn(now()) < 1;
+        return $orders->created_at->diffInHours(now()) < 1;
     }
 
     /**

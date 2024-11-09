@@ -124,6 +124,14 @@ export default function MainLayout({
 
                     {children}
                 </div>
+                <footer className="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50">
+                    <div className="px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
+                        <p className="text-center">
+                            &copy; {new Date().getFullYear()} All rights
+                            reserved.
+                        </p>
+                    </div>
+                </footer>
             </div>
         </div>
     );

@@ -129,17 +129,77 @@ class OrderController extends Controller
     public function removeItem(string $orderId, string $orderItemId)
     {
         $orderItem = OrderItems::findOrFail($orderItemId);
-        Gate::authorize('delete', $orderItem);
+        $order = Orders::findOrFail($orderId);
+        Gate::authorize('delete', $order);
         $orderItem->forceDelete();
 
-        if ($orderItem->order->orderItems->count() === 0) {
-            $orderItem->order->forceDelete();
+        if ($order->orderItems->count() === 0) {
+            $order->forceDelete();
         }
 
         return Redirect::back()->with('success', 'Item removed from cart successfully!');
     }
 
+    public function updateQuantity(Request $request, string $orderId, string $orderItemId)
+    {
+        $orderItem = OrderItems::findOrFail($orderItemId);
+        $order = Orders::findOrFail($orderId);
+        Gate::authorize('update', $order);
+        $orderItem->update([
+            'quantity' => $request->quantity,
+        ]);
+    }
+
     public function checkout($orderId)
+    {
+        return DB::transaction(function () use ($orderId) {
+            $order = Orders::where('user_id', Auth::id())
+                ->where('id', $orderId)
+                ->where('status', 'cart')
+                ->with('orderItems.book')
+                ->firstOrFail();
+
+            // Check stock availability for all items
+            foreach ($order->orderItems as $item) {
+                $book = $item->book;
+                if ($book->stock < $item->quantity) {
+                    return back()->withErrors(['error' => "Not enough stock available for {$book->title}"]);
+                }
+            }
+
+            // Decrement stock for all items
+            // foreach ($order->orderItems as $item) {
+            //     $item->book->decrement('stock', $item->quantity);
+
+            //     // Trigger BookUpdated event for each book
+            //     event(new BookUpdated($item->book));
+            // }
+
+            // $order->update([
+            //     'status' => 'pending',
+            // ]);
+
+            return Inertia::render('Orders/Checkout', ['order' => $order]);
+
+            // return Redirect::route('dashboard')
+            //     ->with('success', 'Order completed successfully!');
+        });
+    }
+
+    public function cancel(string $orderId)
+    {
+        return DB::transaction(function () use ($orderId) {
+            $order = Orders::findOrFail($orderId);
+            Gate::authorize('update', $order);
+            $order->update([
+                'status' => 'cancelled',
+            ]);
+
+            return Redirect::back()->with('success', 'Order cancelled successfully!');
+        });
+    }
+
+    public function pay(string $orderId)
     {
         return DB::transaction(function () use ($orderId) {
             $order = Orders::where('user_id', Auth::id())
@@ -167,6 +227,8 @@ class OrderController extends Controller
             $order->update([
                 'status' => 'pending',
             ]);
+
+
 
             return Redirect::route('dashboard')
                 ->with('success', 'Order completed successfully!');

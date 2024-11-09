@@ -44,18 +44,16 @@ class OrderResource extends Resource
                 Tables\Columns\TextColumn::make('total_price')
                     ->money('USD')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->badge()
-                    ->extraAttributes([
-                        'class' => 'capitalize',
+                Tables\Columns\SelectColumn::make('status')
+                    ->options([
+                        'cart' => 'Cart',
+                        'pending' => 'Pending',
+                        'shipped' => 'Shipped',
+                        'delivered' => 'Delivered',
+                        'cancelled' => 'Cancelled',
                     ])
-                    ->color(fn(string $state): string => match ($state) {
-                        'cart' => 'warning',
-                        'pending' => 'warning',
-                        'processing' => 'info',
-                        'completed' => 'success',
-                        'cancelled' => 'danger',
-                    }),
+                    ->disabled(fn(Orders $record) => $record->status !== 'cart' && $record->status !== 'pending')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Order Date')
                     ->dateTime()

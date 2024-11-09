@@ -200,12 +200,12 @@ export default function Show({
                         </div>
                         {books[0].stock > 0 ? (
                             <form onSubmit={addToCart}>
-                                <div className="flex flex-row items-center gap-5">
-                                    <div className="relative flex flex-col justify-end gap-2">
+                                <div className="flex flex-row-reverse items-center gap-5 sm:flex-row">
+                                    <div className="">
                                         <TextInput
                                             id="quantity"
                                             type="number"
-                                            className="w-16"
+                                            className="w-16 mt-4 sm:mt-0"
                                             value={data.quantity}
                                             // min={1}
                                             // max={book.stock}
@@ -216,15 +216,20 @@ export default function Show({
                                                 );
                                             }}
                                         />
-                                        <InputError message={errors.quantity} />
                                     </div>
-                                    <button
-                                        disabled={processing}
-                                        className="h-full rounded-md bg-[#FF2D20] sm:px-6 px-3 py-3 sm:py-3 sm:mr-6 mt-4 sm:mt-0 font-medium text-white text-xs sm:text-xl transition-colors hover:bg-[#FF2D20]/80 flex items-center gap-2"
-                                    >
-                                        <ShoppingCartIcon className="w-4 h-4 sm:w-6 sm:h-6" />
-                                        Add to Cart
-                                    </button>
+                                    <div className="relative">
+                                        <button
+                                            disabled={processing}
+                                            className="h-full rounded-md bg-[#FF2D20] sm:px-6 px-3 py-3 sm:py-3 sm:mr-6 mt-4 sm:mt-0 font-medium text-white text-xs sm:text-xl transition-colors hover:bg-[#FF2D20]/80 flex items-center gap-2"
+                                        >
+                                            <ShoppingCartIcon className="w-4 h-4 sm:w-6 sm:h-6" />
+                                            Add to Cart
+                                        </button>
+                                        <InputError
+                                            message={errors.quantity}
+                                            className="absolute text-nowrap"
+                                        />
+                                    </div>
                                 </div>
                                 <Transition
                                     show={recentlySuccessful}

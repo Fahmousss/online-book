@@ -37,8 +37,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/books/{slug}', [OrderController::class, 'store'])->name('books.addToCart');
     Route::patch('/orders/{orderId}', [OrderController::class, 'checkout'])->name('orders.checkout');
+    Route::patch('/orders/{orderId}/pay', [OrderController::class, 'pay'])->name('orders.pay');
+    Route::patch('/orders/{orderId}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::delete('/orders/{orderId}', [OrderController::class, 'destroy'])->name('orders.removeOrder');
     Route::delete('/orders/{orderId}/{orderItemId}', [OrderController::class, 'removeItem'])->name('orders.removeItem');
+    Route::patch('/orders/{orderId}/{orderItemId}', [OrderController::class, 'updateQuantity'])->name('orders.updateQuantity');
 });
 
 require __DIR__ . '/auth.php';

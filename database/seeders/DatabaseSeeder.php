@@ -18,9 +18,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create 50 regular books
-        Category::factory(5)->create();
+        // Category::factory(5)->create();
         Author::factory(10)->create();
-        Book::factory(50)->create();
+        // Book::factory(50)->create();
 
         $user = User::factory()->create([
             'name' => 'Admin Kito',
@@ -32,8 +32,8 @@ class DatabaseSeeder extends Seeder
         ]);
         $user->assignRole($role);
 
-        Book::factory(10)->featured()->create();
-        // Create 5 out-of-stock books
-        Book::factory(5)->outOfStock()->create();
+        // Book::factory(10)->featured()->create();
+        // // Create 5 out-of-stock books
+        // Book::factory(5)->outOfStock()->create();
     }
 }
