@@ -35,6 +35,13 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
                 'admin' => $request->user()?->hasRole('admin'),
+                'cart_count' => $request->user()
+                    ? $request->user()
+                    ->orders()
+                    ->where('status', null)
+                    ->withCount('orderItems')
+                    ->first()?->order_items_count ?? null
+                    : null,
             ],
             'ziggy' => fn() => [
                 ...(new Ziggy)->toArray(),

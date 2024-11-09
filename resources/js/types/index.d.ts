@@ -13,6 +13,7 @@ export type PageProps<
     auth: {
         user: User;
         admin: boolean;
+        cart_count: number;
     };
     ziggy: Config & { location: string };
 };

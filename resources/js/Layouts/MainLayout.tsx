@@ -1,5 +1,6 @@
 import { Link } from "@inertiajs/react";
 import Dropdown from "@/Components/Dropdown";
+import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 
 interface MainLayoutProps {
     children: React.ReactNode;
@@ -8,6 +9,7 @@ interface MainLayoutProps {
             name: string;
         };
         admin?: boolean;
+        cart_count?: number | null;
     };
     header?: React.ReactNode;
 }
@@ -28,7 +30,16 @@ export default function MainLayout({
                                     <Link
                                         href={route("dashboard")}
                                         className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                                    ></Link>
+                                    >
+                                        {auth.cart_count && (
+                                            <div className="relative">
+                                                <span className="absolute flex items-center justify-center w-4 h-4 text-xs text-white bg-red-500 rounded-full -top-2 -right-2">
+                                                    {auth.cart_count}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <ShoppingCartIcon className="w-6 h-6" />
+                                    </Link>
                                     <Dropdown>
                                         <Dropdown.Trigger>
                                             <span className="inline-flex rounded-md">

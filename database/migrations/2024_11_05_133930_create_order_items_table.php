@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
+            $table->foreignId('orders_id')->constrained()->onDelete('cascade');
             $table->foreignId('book_id')->constrained()->onDelete('cascade');
             $table->integer('quantity')->default(1);
             $table->decimal('price', 10, 2);
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->softDeletes();
 
             // Composite index for fast lookups on order-item pairs
-            $table->unique(['order_id', 'book_id']);
+            $table->unique(['orders_id', 'book_id']);
         });
     }
 
