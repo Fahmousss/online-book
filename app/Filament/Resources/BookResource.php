@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Events\BookCreated;
+use App\Events\BookUpdated;
 use App\Filament\Resources\BookResource\Pages;
 use App\Filament\Resources\BookResource\RelationManagers;
 use App\Models\Book;
@@ -22,6 +23,7 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\Alignment;
+use Filament\Support\View\Components\Modal;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
@@ -189,9 +191,11 @@ class BookResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->after(fn(Book $record) => BookUpdated::dispatch($record)),
                 Tables\Actions\ForceDeleteAction::make(),
-                Tables\Actions\RestoreAction::make(),
+                Tables\Actions\RestoreAction::make()
+                    ->after(fn(Book $record) => BookUpdated::dispatch($record)),
             ]);
         // ->bulkActions([
         //     Tables\Actions\BulkActionGroup::make([

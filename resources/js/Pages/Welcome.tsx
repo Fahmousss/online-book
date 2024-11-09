@@ -4,11 +4,17 @@ import { useState, useEffect } from "react";
 import Pagination from "@/Components/Pagination";
 import ProfileDropdown from "@/Components/ProfileDropdown";
 import Dropdown from "@/Components/Dropdown";
+import MainLayout from "@/Layouts/MainLayout";
 
 interface Author {
     id: number;
     name: string;
     // ... any other author fields
+}
+
+interface Category {
+    id: number;
+    name: string;
 }
 
 interface PaginationData {
@@ -26,19 +32,27 @@ interface Book {
     description: string;
     author?: Author; // Make author optional since it's a relationship
     price: number;
-    image: string;
+    images?: string;
     published_date: string;
+    categories?: Category[];
+    deleted_at: string | null;
 }
 
 export default function Welcome({
     auth,
     isAdmin,
     books: initialBooks,
-}: PageProps<{ books: PaginationData; isAdmin: boolean }>) {
+    categories,
+}: PageProps<{
+    books: PaginationData;
+    isAdmin: boolean;
+    categories: string[];
+}>) {
     const [searchQuery, setSearchQuery] = useState("");
     const [books, setBooks] = useState(initialBooks);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 9;
+    const itemsPerPage = 14;
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
     useEffect(() => {
         console.log("Setting up Echo listener");
@@ -82,12 +96,20 @@ export default function Welcome({
         };
     }, []);
 
-    // Filter books based on search query
+    // Filter books based on search query and selected categories
     const filteredBooks = books.data.filter(
         (book) =>
-            book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            book.author?.name.toLowerCase().includes(searchQuery.toLowerCase())
+            book.deleted_at === null &&
+            (book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                book.author?.name
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase())) &&
+            (selectedCategories.length === 0 ||
+                book.categories?.some((category) =>
+                    selectedCategories.includes(category.name)
+                ))
     );
+    console.log(filteredBooks);
 
     // Calculate pagination
     const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
@@ -105,142 +127,104 @@ export default function Welcome({
     // Reset to first page when search query changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchQuery]);
+    }, [searchQuery, selectedCategories]);
 
     return (
-        <>
+        <MainLayout auth={auth}>
             <Head title="Welcome" />
-            <div className="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50">
-                <div className="relative flex min-h-screen flex-col  selection:bg-[#FF2D20] selection:text-white">
-                    <div className="relative w-full px-6 ">
-                        <header className="items-center py-10 ">
-                            <nav className="flex justify-end flex-1 -mx-3">
-                                {auth.user ? (
-                                    <>
-                                        <Link
-                                            href={route("dashboard")}
-                                            className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                                        >
-                                            Dashboard
-                                        </Link>
-                                        <Dropdown>
-                                            <Dropdown.Trigger>
-                                                <span className="inline-flex rounded-md">
-                                                    <button
-                                                        type="button"
-                                                        className="inline-flex items-center capitalize rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                                                    >
-                                                        {auth.user.name}
+            <main className="mt-6">
+                <div className="mb-6">
+                    <input
+                        type="text"
+                        placeholder="Search books or authors..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF2D20] dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    />
+                </div>
 
-                                                        <svg
-                                                            className="-me-0.5 ms-2 h-4 w-4"
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                            viewBox="0 0 20 20"
-                                                            fill="currentColor"
-                                                        >
-                                                            <path
-                                                                fillRule="evenodd"
-                                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                                clipRule="evenodd"
-                                                            />
-                                                        </svg>
-                                                    </button>
-                                                </span>
-                                            </Dropdown.Trigger>
+                <div className="mb-6">
+                    {categories.map((category) => (
+                        <div key={category} className="inline-block mr-2">
+                            <input
+                                id={category}
+                                type="checkbox"
+                                value={category}
+                                checked={selectedCategories.includes(category)}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setSelectedCategories((prev) =>
+                                        prev.includes(value)
+                                            ? prev.filter((c) => c !== value)
+                                            : [...prev, value]
+                                    );
+                                }}
+                                className="hidden"
+                            />
+                            <label
+                                key={category}
+                                className={`px-2 py-1 rounded-md text-sm inline-flex items-center text-white font-medium capitalize hover:bg-[#FF2D20]/80 select-none transition-colors cursor-pointer  ring-1 ring-transparent focus-visible:ring-[#FF2D20] ring-offset-1 ${
+                                    selectedCategories.includes(category)
+                                        ? "bg-[#FF2D20]/80 text-white ring-white"
+                                        : ""
+                                }`}
+                                htmlFor={category}
+                            >
+                                {category}
+                            </label>
+                        </div>
+                    ))}
+                </div>
 
-                                            <Dropdown.Content>
-                                                <Dropdown.Link
-                                                    href={route("profile.edit")}
-                                                >
-                                                    Profile
-                                                </Dropdown.Link>
-                                                <Dropdown.Link
-                                                    href={route("logout")}
-                                                    method="post"
-                                                    as="button"
-                                                >
-                                                    Log Out
-                                                </Dropdown.Link>
-                                            </Dropdown.Content>
-                                        </Dropdown>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Link
-                                            href={route("login")}
-                                            className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                                        >
-                                            Log in
-                                        </Link>
-                                        <Link
-                                            href={route("register")}
-                                            className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                                        >
-                                            Register
-                                        </Link>
-                                    </>
-                                )}
-                                {isAdmin && (
-                                    <a
-                                        href="/admin"
-                                        className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                                    >
-                                        Admin
-                                    </a>
-                                )}
-                            </nav>
-                        </header>
-
-                        <main className="mt-6">
-                            <div className="mb-6">
-                                <input
-                                    type="text"
-                                    placeholder="Search books or authors..."
-                                    value={searchQuery}
-                                    onChange={(e) =>
-                                        setSearchQuery(e.target.value)
-                                    }
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FF2D20] dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-6">
-                                {paginatedBooks.map((book) => (
-                                    <div
-                                        key={book.slug}
-                                        className="overflow-hidden transition-all bg-white rounded-lg shadow-md hover:shadow-lg dark:bg-gray-800"
-                                    >
-                                        <div className="p-6">
-                                            <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
-                                                {book.title}
-                                            </h3>
-                                            <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                                                {book.author?.name}
-                                            </p>
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    ${book.price}
-                                                </span>
-                                                <Link
-                                                    href={"/"}
-                                                    className="rounded-md bg-[#FF2D20] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#FF2D20]/80"
-                                                >
-                                                    View Details
-                                                </Link>
-                                            </div>
+                {paginatedBooks.length > 0 ? (
+                    <div>
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-7">
+                            {paginatedBooks.map((book) => (
+                                <Link
+                                    key={book.slug}
+                                    href={`/books/${book.slug}`}
+                                    className="overflow-hidden transition-all bg-white rounded-lg shadow-md hover:shadow-inner hover:bg-gray-700 dark:bg-gray-800"
+                                >
+                                    <div className="p-5">
+                                        <img
+                                            src={
+                                                book.images
+                                                    ? `/storage/${book.images}`
+                                                    : `https://via.placeholder.com/400x600/000000/FFFFFF/?text=${book.title}`
+                                            }
+                                            alt={book.title}
+                                            loading="lazy"
+                                            width={400}
+                                            height={600}
+                                            className="object-cover mb-4 rounded-lg"
+                                        />
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                                            {book.author?.name}
+                                        </p>
+                                        <h3 className="mb-2 text-sm font-light text-gray-900 dark:text-white">
+                                            {book.title}
+                                        </h3>
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-medium text-gray-900 text-md dark:text-white">
+                                                ${book.price}
+                                            </span>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                            <Pagination
-                                currentPage={currentPage}
-                                lastPage={totalPages}
-                                onPageChange={handlePageChange}
-                            />
-                        </main>
+                                </Link>
+                            ))}
+                        </div>
+                        <Pagination
+                            currentPage={currentPage}
+                            lastPage={totalPages}
+                            onPageChange={handlePageChange}
+                        />
                     </div>
-                </div>
-            </div>
-        </>
+                ) : (
+                    <div className="flex items-center justify-center h-full">
+                        <p className="text-gray-500">No books found</p>
+                    </div>
+                )}
+            </main>
+        </MainLayout>
     );
 }

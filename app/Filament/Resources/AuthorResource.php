@@ -65,8 +65,8 @@ class AuthorResource extends Resource
                 TextColumn::make('date_of_birth')->label("Birth")->date(),
                 TextColumn::make('books.title')
                     ->listWithLineBreaks()
-                    ->bulleted()
-                    ->size('xs'),
+                    ->size('xs')
+                    ->limitList(3),
             ])
             ->filters([
                 //

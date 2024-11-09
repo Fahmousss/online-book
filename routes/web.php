@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\BookController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Book;
+use App\Models\Category;
 use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
@@ -14,16 +16,17 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'isAdmin' => Auth::check() && Auth::user()->roles->pluck('name')->contains('admin'),
         'books' => [
-            'data' => Book::with('author')->get(),
+            'data' => Book::with(['author:id,name', 'categories:id,name'])->get(),
             'current_page' => 1,
             'last_page' => 1,
-            'per_page' => 9,
+            'per_page' => 14,
             'total' => Book::count(),
         ],
+        'categories' => Category::all()->pluck('name'),
     ]);
 })->name('home');
 
-
+Route::get('/books/{slug}', [BookController::class, 'show'])->name('books.show');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
