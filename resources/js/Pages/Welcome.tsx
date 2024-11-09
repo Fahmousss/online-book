@@ -41,12 +41,10 @@ interface Book {
 
 export default function Welcome({
     auth,
-    isAdmin,
     books: initialBooks,
     categories,
 }: PageProps<{
     books: PaginationData;
-    isAdmin: boolean;
     categories: string[];
 }>) {
     const [searchQuery, setSearchQuery] = useState("");

@@ -17,7 +17,7 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'isAdmin' => Auth::check() && Auth::user()->roles->pluck('name')->contains('admin'),
         'books' => [
-            'data' => Book::with(['author:id,name', 'categories:id,name'])->get(),
+            'data' => Book::with(['author:id,name', 'categories:id,name'])->orderBy('created_at', 'desc')->get(),
             'current_page' => 1,
             'last_page' => 1,
             'per_page' => 14,
@@ -29,15 +29,16 @@ Route::get('/', function () {
 
 Route::get('/books/{slug}', [BookController::class, 'show'])->name('books.show');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [OrderController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/books/{slug}', [OrderController::class, 'store'])->name('books.addToCart');
+    Route::patch('/orders/{orderId}', [OrderController::class, 'checkout'])->name('orders.checkout');
+    Route::delete('/orders/{orderId}', [OrderController::class, 'destroy'])->name('orders.removeOrder');
+    Route::delete('/orders/{orderId}/{orderItemId}', [OrderController::class, 'removeItem'])->name('orders.removeItem');
 });
 
 require __DIR__ . '/auth.php';

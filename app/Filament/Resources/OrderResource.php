@@ -46,7 +46,11 @@ class OrderResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
+                    ->extraAttributes([
+                        'class' => 'capitalize',
+                    ])
                     ->color(fn(string $state): string => match ($state) {
+                        'cart' => 'warning',
                         'pending' => 'warning',
                         'processing' => 'info',
                         'completed' => 'success',

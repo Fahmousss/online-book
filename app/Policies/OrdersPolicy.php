@@ -77,12 +77,12 @@ class OrdersPolicy
         }
 
         // Check if order is still pending
-        if ($orders->status !== 'cart') {
+        if ($orders->status != 'cart') {
             return false;
         }
 
         // Check if order is less than 1 hour old
-        return $orders->created_at->diffInHours(now()) < 1;
+        return $orders->created_at->diffIn(now()) < 1;
     }
 
     /**

@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\BookUpdated;
 use App\Models\Orders;
 use App\Models\Book;
+use App\Models\OrderItems;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
 
 class OrderController extends Controller
 {
@@ -15,7 +20,11 @@ class OrderController extends Controller
      */
     public function index()
     {
-        //
+        $orders = Orders::where('user_id', Auth::id())
+            ->with('orderItems.book')
+            ->get();
+
+        return Inertia::render('Dashboard', ['orders' => $orders]);
     }
 
     /**
@@ -31,7 +40,6 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the request
         $request->validate([
             "user_id" => "required|exists:users,id",
             "book_id" => "required|exists:books,id",
@@ -45,32 +53,50 @@ class OrderController extends Controller
                 return back()->withErrors(['quantity' => 'Not enough stock available.']);
             }
 
-            // Create the order
-            $order = Orders::create([
-                'user_id' => $request->user_id,
-                'order_date' => now(),
-                'total_price' => $book->price * $request->quantity,
+            // Find or create pending order for the user
+            $order = Orders::firstOrCreate(
+                [
+                    'user_id' => $request->user_id,
+                    'status' => 'cart'
+                ],
+                [
+                    'total_price' => 0
+                ]
+            );
+
+            // Check if this book already exists in order items
+            $existingItem = $order->orderItems()->where('book_id', $book->id)->first();
+
+            if ($existingItem) {
+                // Update existing order item
+                $existingItem->update([
+                    'quantity' => $existingItem->quantity + $request->quantity,
+                    'price' => $book->price
+                ]);
+            } else {
+                // Create new order item
+                $order->orderItems()->create([
+                    'book_id' => $book->id,
+                    'quantity' => $request->quantity,
+                    'price' => $book->price,
+                ]);
+            }
+
+            // Update total price
+            $order->update([
+                'total_price' => $order->orderItems->sum(function ($item) {
+                    return $item->price * $item->quantity;
+                })
             ]);
 
-            $order->orderItems()->create([
-                'book_id' => $book->id,
-                'quantity' => $request->quantity,
-                'price' => $book->price,
-            ]);
-
-            $book->decrement('stock', $request->quantity);
-
-            return redirect()->back()->with('success', 'Order placed successfully!');
+            return Redirect::back()->with('success', 'Book added to cart successfully!');
         });
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        //
-    }
+    public function show(string $id) {}
 
     /**
      * Show the form for editing the specified resource.
@@ -93,6 +119,57 @@ class OrderController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $order = Orders::findOrFail($id);
+        Gate::authorize('delete', $order);
+        $order->delete();
+
+        return Redirect::back()->with('success', 'Item removed from cart successfully!');
+    }
+
+    public function removeItem(string $orderId, string $orderItemId)
+    {
+        $orderItem = OrderItems::findOrFail($orderItemId);
+        Gate::authorize('delete', $orderItem);
+        $orderItem->forceDelete();
+
+        if ($orderItem->order->orderItems->count() === 0) {
+            $orderItem->order->forceDelete();
+        }
+
+        return Redirect::back()->with('success', 'Item removed from cart successfully!');
+    }
+
+    public function checkout($orderId)
+    {
+        return DB::transaction(function () use ($orderId) {
+            $order = Orders::where('user_id', Auth::id())
+                ->where('id', $orderId)
+                ->where('status', 'cart')
+                ->with('orderItems.book')
+                ->firstOrFail();
+
+            // Check stock availability for all items
+            foreach ($order->orderItems as $item) {
+                $book = $item->book;
+                if ($book->stock < $item->quantity) {
+                    return back()->withErrors(['error' => "Not enough stock available for {$book->title}"]);
+                }
+            }
+
+            // Decrement stock for all items
+            foreach ($order->orderItems as $item) {
+                $item->book->decrement('stock', $item->quantity);
+
+                // Trigger BookUpdated event for each book
+                event(new BookUpdated($item->book));
+            }
+
+            $order->update([
+                'status' => 'pending',
+            ]);
+
+            return Redirect::route('dashboard')
+                ->with('success', 'Order completed successfully!');
+        });
     }
 }

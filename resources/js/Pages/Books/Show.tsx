@@ -2,7 +2,13 @@ import { Head, Link, router, useForm } from "@inertiajs/react";
 import { PageProps } from "@/types";
 import MainLayout from "@/Layouts/MainLayout";
 import { ShoppingCartIcon } from "@heroicons/react/24/solid";
-import { FormEvent, FormEventHandler, useState, useMemo } from "react";
+import {
+    FormEvent,
+    FormEventHandler,
+    useState,
+    useMemo,
+    useEffect,
+} from "react";
 import TextInput from "@/Components/TextInput";
 import InputError from "@/Components/InputError";
 import { Transition } from "@headlessui/react";
@@ -29,6 +35,7 @@ export default function Show({
     recommendedBooks,
 }: PageProps<{ book: Book; recommendedBooks: Book[] }>) {
     const [quantity] = useState(1);
+    const [books, setBooks] = useState<Book[]>([book]);
     const {
         data,
         setData,
@@ -44,6 +51,7 @@ export default function Show({
         book_id: book.id,
         price: book.price,
     });
+
     const addToCart: FormEventHandler = (e) => {
         e.preventDefault();
         if (data.quantity > book.stock) {
@@ -65,49 +73,75 @@ export default function Show({
             .slice(0, 10);
     }, [recommendedBooks, book.id]);
 
+    useEffect(() => {
+        const channel = window.Echo.channel("books");
+
+        // Add connection status logging
+        channel
+            .subscribed(() => {
+                console.log("Successfully subscribed to books channel");
+            })
+            .error((error: any) => {
+                console.error("Echo connection error:", error);
+            });
+
+        channel.listen("BookUpdated", (e: { book: Book }) => {
+            console.log(e);
+            setBooks((currentBooks) =>
+                currentBooks.map((books) =>
+                    books.id === e.book.id ? e.book : books
+                )
+            );
+        });
+        return () => {
+            console.log("Cleaning up Echo listener");
+            window.Echo.leave("books");
+        };
+    }, []);
+
     return (
         <MainLayout auth={auth}>
-            <Head title={book.title} />
+            <Head title={books[0].title} />
 
             <div className="max-w-6xl p-6 mx-auto">
                 <div className="flex flex-col gap-14 sm:flex-row">
                     <div>
                         <img
                             src={
-                                book.images
-                                    ? `/storage/${book.images}`
-                                    : `https://via.placeholder.com/400x600/?text=${book.title}`
+                                books[0].images
+                                    ? `/storage/${books[0].images}`
+                                    : `https://via.placeholder.com/400x600/?text=${books[0].title}`
                             }
                             loading="lazy"
-                            alt={book.title}
+                            alt={books[0].title}
                             width={1500}
                             className="object-cover rounded-lg "
                         />
                     </div>
                     <div>
                         <h1 className="mb-2 text-3xl font-extrabold text-gray-900 dark:text-white">
-                            {book.title}
+                            {books[0].title}
                         </h1>
                         <p className="mb-4 text-gray-600 text-md dark:text-gray-400">
-                            by {book.author.name}
+                            by {books[0].author.name}
                         </p>
 
                         <p className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
-                            ${book.price}
+                            ${books[0].price}
                         </p>
 
                         <div
                             className={`mb-6 text-sm ${
-                                book.stock > 0
+                                books[0].stock > 0
                                     ? "text-green-500"
                                     : "text-red-500"
                             }`}
                         >
-                            Stock : {book.stock}
+                            Stock : {books[0].stock}
                         </div>
 
                         <div className="flex flex-wrap gap-2 mb-4">
-                            {book.categories?.map((category) => (
+                            {books[0].categories?.map((category) => (
                                 <span
                                     key={category.name}
                                     className="inline-block px-3 py-1 mr-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-full dark:bg-gray-700 dark:text-gray-300"
@@ -117,7 +151,7 @@ export default function Show({
                             ))}
                         </div>
                         <p className="text-gray-700 dark:text-gray-300">
-                            {book.description || "No description available"}
+                            {books[0].description || "No description available"}
                         </p>
                     </div>
                 </div>
@@ -125,24 +159,24 @@ export default function Show({
 
             <div className="fixed z-10 w-full -translate-x-1/2 left-1/2 max-w-7xl bottom-7">
                 <div
-                    key={book.slug}
+                    key={books[0].slug}
                     className="overflow-hidden transition-all bg-white rounded-lg shadow-md dark:bg-gray-800"
                 >
                     <div className="flex flex-col items-start justify-between p-5 sm:items-center sm:flex-row">
                         <div className="flex flex-row items-start gap-4">
                             <img
                                 src={
-                                    book.images
-                                        ? `/storage/${book.images}`
-                                        : `https://via.placeholder.com/400x600/000000/FFFFFF/?text=${book.title}`
+                                    books[0].images
+                                        ? `/storage/${books[0].images}`
+                                        : `https://via.placeholder.com/400x600/000000/FFFFFF/?text=${books[0].title}`
                                 }
-                                alt={book.title}
+                                alt={books[0].title}
                                 loading="lazy"
                                 className="object-cover w-24 rounded-lg sm:w-20"
                             />
                             <div>
                                 <div className="flex flex-wrap gap-2 mb-2">
-                                    {book.categories?.map((category) => (
+                                    {books[0].categories?.map((category) => (
                                         <span
                                             key={category.name}
                                             className="inline-block px-3 py-1 mr-2 text-xs font-semibold text-gray-700 bg-gray-200 rounded-lg dark:bg-gray-700 dark:text-gray-300"
@@ -152,19 +186,19 @@ export default function Show({
                                     ))}
                                 </div>
                                 <p className="text-sm text-gray-600 sm:text-md dark:text-gray-400">
-                                    {book.author?.name}
+                                    {books[0].author?.name}
                                 </p>
                                 <h3 className="mb-2 text-lg font-light text-gray-900 sm:text-xl dark:text-white">
-                                    {book.title}
+                                    {books[0].title}
                                 </h3>
                                 <div className="flex items-center justify-between">
                                     <span className="font-medium text-gray-900 text-md dark:text-white">
-                                        ${book.price}
+                                        ${books[0].price}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        {book.stock > 0 ? (
+                        {books[0].stock > 0 ? (
                             <form onSubmit={addToCart}>
                                 <div className="flex flex-row items-center gap-5">
                                     <div className="relative flex flex-col justify-end gap-2">
