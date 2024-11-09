@@ -7,12 +7,12 @@ export default function Dashboard({ auth }: { auth: any }) {
         <MainLayout
             auth={auth}
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Dashboard
+                <h2 className="text-3xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    Your Books
                 </h2>
             }
         >
-            <Head title="Dashboard" />
+            <Head title="Your Books" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">

@@ -2,8 +2,10 @@
 
 namespace App\Policies;
 
+use App\Models\Book;
 use App\Models\Orders;
 use App\Models\User;
+use Clue\Redis\Protocol\Model\Request;
 use Illuminate\Auth\Access\Response;
 
 class OrdersPolicy
@@ -33,12 +35,16 @@ class OrdersPolicy
             return false;
         }
         // Check if user has reached order limit
-        $pendingOrdersCount = Orders::where('user_id', $user->id)
-            ->where('status', 'pending')
+        $OrdersCount = Orders::where('user_id', $user->id)
+            ->where('status', 'cart')
             ->count();
 
+        $isStockAvailable = Book::where('stock', '>', 0)->count() > 0;
         // Limit users to 5 pending orders at a time
-        return $pendingOrdersCount < 5;
+        if (!$isStockAvailable) {
+            return false;
+        }
+        return $OrdersCount < 5;
     }
 
     /**
@@ -52,7 +58,7 @@ class OrdersPolicy
         }
 
         // Check if order is still pending
-        if ($orders->status !== 'pending') {
+        if ($orders->status !== 'cart') {
             return false;
         }
 
@@ -71,7 +77,7 @@ class OrdersPolicy
         }
 
         // Check if order is still pending
-        if ($orders->status !== 'pending') {
+        if ($orders->status !== 'cart') {
             return false;
         }
 

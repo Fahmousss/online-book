@@ -45,7 +45,8 @@ class CategoryResource extends Resource
                                 'sm' => 2,
                                 'xl' => 3,
                                 '2xl' => 4,
-                            ]),
+                            ])
+                            ->required(),
                         TextInput::make('description')
                             ->maxLength(20)
                             ->autocomplete(false)
@@ -53,7 +54,8 @@ class CategoryResource extends Resource
                                 'sm' => 2,
                                 'xl' => 3,
                                 '2xl' => 4,
-                            ]),
+                            ])
+                            ->required(),
                     ])
             ]);
     }
@@ -89,8 +91,8 @@ class CategoryResource extends Resource
     {
         return [
             'index' => Pages\ListCategories::route('/'),
-            'create' => Pages\CreateCategory::route('/create'),
-            'edit' => Pages\EditCategory::route('/{record}/edit'),
+            // 'create' => Pages\CreateCategory::route('/create'),
+            // 'edit' => Pages\EditCategory::route('/{record}/edit'),
         ];
     }
 }

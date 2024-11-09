@@ -4,6 +4,7 @@ import DeleteUserForm from "./Partials/DeleteUserForm";
 import UpdatePasswordForm from "./Partials/UpdatePasswordForm";
 import UpdateProfileInformationForm from "./Partials/UpdateProfileInformationForm";
 import MainLayout from "@/Layouts/MainLayout";
+import UpdateAddress from "./Partials/UpdateAddress";
 
 export default function Edit({
     auth,
@@ -14,7 +15,7 @@ export default function Edit({
         <MainLayout
             auth={auth}
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                <h2 className="text-3xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     Profile
                 </h2>
             }
@@ -29,6 +30,9 @@ export default function Edit({
                             status={status}
                             className="max-w-xl"
                         />
+                    </div>
+                    <div className="p-4 bg-white shadow sm:rounded-lg sm:p-8 dark:bg-gray-800">
+                        <UpdateAddress className="max-w-xl" />
                     </div>
 
                     <div className="p-4 bg-white shadow sm:rounded-lg sm:p-8 dark:bg-gray-800">

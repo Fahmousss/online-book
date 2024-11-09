@@ -15,7 +15,6 @@ class Book extends Model
         'slug',
         'description',
         'author_id',
-        'category_id',
         'stock',
         'price',
         'published_date',
@@ -24,6 +23,11 @@ class Book extends Model
     ];
 
     protected $dates = ['deleted_at', 'published_date'];
+
+    protected $casts = [
+        'published_date' => 'datetime',
+        'is_featured' => 'boolean',
+    ];
 
     // Relationship with Author
     public function author()

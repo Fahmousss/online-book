@@ -32,6 +32,7 @@ interface Book {
     description: string;
     author?: Author; // Make author optional since it's a relationship
     price: number;
+    stock: number;
     images?: string;
     published_date: string;
     categories?: Category[];
@@ -109,7 +110,6 @@ export default function Welcome({
                     selectedCategories.includes(category.name)
                 ))
     );
-    console.log(filteredBooks);
 
     // Calculate pagination
     const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
@@ -178,12 +178,12 @@ export default function Welcome({
 
                 {paginatedBooks.length > 0 ? (
                     <div>
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-7">
+                        <div className="grid grid-cols-2 gap-6 md:grid-cols-4 lg:grid-cols-7">
                             {paginatedBooks.map((book) => (
                                 <Link
                                     key={book.slug}
                                     href={`/books/${book.slug}`}
-                                    className="overflow-hidden transition-all bg-white rounded-lg shadow-md hover:shadow-inner hover:bg-gray-700 dark:bg-gray-800"
+                                    className="overflow-hidden transition-all bg-white rounded-lg shadow-md hover:shadow-inner hover:bg-gray-700 dark:bg-gray-800 "
                                 >
                                     <div className="p-5">
                                         <img
@@ -196,7 +196,7 @@ export default function Welcome({
                                             loading="lazy"
                                             width={400}
                                             height={600}
-                                            className="object-cover mb-4 rounded-lg"
+                                            className="object-cover w-full h-full mb-4 rounded-lg"
                                         />
                                         <p className="text-xs text-gray-600 dark:text-gray-400">
                                             {book.author?.name}
@@ -209,6 +209,11 @@ export default function Welcome({
                                                 ${book.price}
                                             </span>
                                         </div>
+                                        {book.stock === 0 && (
+                                            <p className="text-xs text-red-500">
+                                                Out of stock
+                                            </p>
+                                        )}
                                     </div>
                                 </Link>
                             ))}
