@@ -17,13 +17,20 @@ class BookUpdated implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        return [new Channel('books')];
+        return [
+            new Channel('books'),
+        ];
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'book.updated';
     }
 
     public function broadcastWith(): array
     {
         return [
-            'book' => $this->book->load('author', 'categories')
+            'book' => $this->book->load('author', 'categories'),
         ];
     }
 }

@@ -37,7 +37,10 @@ class BookController extends Controller
      */
     public function show(string $id)
     {
-        $book = Book::with(['author', 'categories'])->where('slug', $id)->firstOrFail();
+        $book = Book::withTrashed()
+            ->with(['author', 'categories'])
+            ->where('slug', $id)
+            ->firstOrFail();
 
         return Inertia::render('Books/Show', [
             'book' => $book,

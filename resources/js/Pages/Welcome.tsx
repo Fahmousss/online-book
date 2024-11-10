@@ -5,6 +5,7 @@ import Pagination from "@/Components/Pagination";
 import ProfileDropdown from "@/Components/ProfileDropdown";
 import Dropdown from "@/Components/Dropdown";
 import MainLayout from "@/Layouts/MainLayout";
+import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
 
 interface Author {
     id: number;
@@ -73,14 +74,17 @@ export default function Welcome({
                 console.error("Echo connection error:", error);
             });
 
-        channel.listen("BookCreated", (e: { book: Book }) => {
+        channel.listen(".book.created", (e: { book: Book }) => {
+            console.log("BookCreated event received");
+
             setBooks((currentBooks) => ({
                 ...currentBooks,
                 data: [...currentBooks.data, e.book],
             }));
         });
 
-        channel.listen("BookUpdated", (e: { book: Book }) => {
+        channel.listen(".book.updated", (e: { book: Book }) => {
+            console.log("BookUpdated event received");
             setBooks((currentBooks) => ({
                 ...currentBooks,
                 data: currentBooks.data.map((book) =>
@@ -98,7 +102,6 @@ export default function Welcome({
     // Filter books based on search query and selected categories
     const filteredBooks = books.data.filter(
         (book) =>
-            book.deleted_at === null &&
             (book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 book.author?.name
                     .toLowerCase()
@@ -131,6 +134,15 @@ export default function Welcome({
         <MainLayout auth={auth}>
             <Head title="Welcome" />
             <main className="mt-6">
+                <div className="mb-8 text-center">
+                    <h1 className="text-6xl font-extrabold text-gray-900 dark:text-white">
+                        Welcome to Our Bookstore
+                    </h1>
+                    <p className="mt-2 text-xl text-gray-600 dark:text-gray-400">
+                        Discover your next favorite book from our extensive
+                        collection
+                    </p>
+                </div>
                 <div className="mb-6">
                     <input
                         type="text"
@@ -142,6 +154,9 @@ export default function Welcome({
                 </div>
 
                 <div className="mb-6">
+                    <p className="mb-2 text-sm font-medium text-gray-500">
+                        Filter by category:
+                    </p>
                     {categories.map((category) => (
                         <div key={category} className="inline-block mr-2">
                             <input
@@ -181,14 +196,16 @@ export default function Welcome({
                                 <Link
                                     key={book.slug}
                                     href={`/books/${book.slug}`}
-                                    className="overflow-hidden transition-all bg-white rounded-lg shadow-md hover:shadow-inner hover:bg-gray-700 dark:bg-gray-800 "
+                                    className={`overflow-hidden transition-all bg-white rounded-lg shadow-md hover:shadow-inner hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 ${
+                                        book.deleted_at ? "opacity-60" : ""
+                                    }`}
                                 >
                                     <div className="p-5">
                                         <img
                                             src={
                                                 book.images
                                                     ? `/storage/${book.images}`
-                                                    : `https://via.placeholder.com/400x600/000000/FFFFFF/?text=${book.title}`
+                                                    : `/storage/logo.png`
                                             }
                                             alt={book.title}
                                             loading="lazy"
@@ -207,9 +224,12 @@ export default function Welcome({
                                                 ${book.price}
                                             </span>
                                         </div>
-                                        {book.stock === 0 && (
+                                        {(book.stock === 0 ||
+                                            book.deleted_at) && (
                                             <p className="text-xs text-red-500">
-                                                Out of stock
+                                                {book.deleted_at
+                                                    ? "Not Available"
+                                                    : "Out of stock"}
                                             </p>
                                         )}
                                     </div>
@@ -224,7 +244,12 @@ export default function Welcome({
                     </div>
                 ) : (
                     <div className="flex items-center justify-center h-full">
-                        <p className="text-gray-500">No books found</p>
+                        <div className="text-center">
+                            <ExclamationCircleIcon className="w-56 h-56 text-gray-600 dark:text-gray-400" />
+                            <p className="text-2xl text-gray-600 dark:text-gray-400">
+                                No books found
+                            </p>
+                        </div>
                     </div>
                 )}
             </main>

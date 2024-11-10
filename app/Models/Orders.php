@@ -16,6 +16,7 @@ class Orders extends Model
         'order_date',
         'total_price',
         'status',
+        'address',
     ];
 
     protected $dates = ['deleted_at', 'order_date'];

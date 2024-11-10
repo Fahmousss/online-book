@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamp('order_date')->useCurrent();
             $table->decimal('total_price', 10, 2);
+            $table->string('address')->nullable();
             $table->enum('status', ['cart', 'pending', 'shipped', 'delivered', 'cancelled'])->default('cart')->index();
             $table->timestamps();
             $table->softDeletes();

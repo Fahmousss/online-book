@@ -21,7 +21,7 @@ class OrderController extends Controller
     public function index()
     {
         $orders = Orders::where('user_id', Auth::id())
-            ->with('orderItems.book')
+            ->with('orderItems.book.author')
             ->get();
 
         return Inertia::render('Dashboard', ['orders' => $orders]);
@@ -136,6 +136,11 @@ class OrderController extends Controller
         if ($order->orderItems->count() === 0) {
             $order->forceDelete();
         }
+        $order->update([
+            'total_price' => $order->orderItems->sum(function ($item) {
+                return $item->price * $item->quantity;
+            })
+        ]);
 
         return Redirect::back()->with('success', 'Item removed from cart successfully!');
     }
@@ -148,6 +153,11 @@ class OrderController extends Controller
         $orderItem->update([
             'quantity' => $request->quantity,
         ]);
+        $order->update([
+            'total_price' => $order->orderItems->sum(function ($item) {
+                return $item->price * $item->quantity;
+            })
+        ]);
     }
 
     public function checkout($orderId)
@@ -156,7 +166,7 @@ class OrderController extends Controller
             $order = Orders::where('user_id', Auth::id())
                 ->where('id', $orderId)
                 ->where('status', 'cart')
-                ->with('orderItems.book')
+                ->with('orderItems.book.author')
                 ->firstOrFail();
 
             // Check stock availability for all items
@@ -189,19 +199,33 @@ class OrderController extends Controller
     public function cancel(string $orderId)
     {
         return DB::transaction(function () use ($orderId) {
-            $order = Orders::findOrFail($orderId);
+            $order = Orders::with('orderItems.book')->findOrFail($orderId);
             Gate::authorize('update', $order);
+
+
+            // Return stock for all items
+            foreach ($order->orderItems as $item) {
+                $item->book->increment('stock', $item->quantity);
+                event(new BookUpdated($item->book));
+            }
+
             $order->update([
                 'status' => 'cancelled',
             ]);
+            event(new BookUpdated($order->orderItems->first()->book));
 
             return Redirect::back()->with('success', 'Order cancelled successfully!');
         });
     }
 
-    public function pay(string $orderId)
+    public function pay(Request $request, string $orderId)
     {
-        return DB::transaction(function () use ($orderId) {
+        return DB::transaction(function () use ($request, $orderId) {
+            // Validate the request
+            $request->validate([
+                'address' => 'nullable|string',
+            ]);
+
             $order = Orders::where('user_id', Auth::id())
                 ->where('id', $orderId)
                 ->where('status', 'cart')
@@ -216,19 +240,23 @@ class OrderController extends Controller
                 }
             }
 
-            // Decrement stock for all items
-            foreach ($order->orderItems as $item) {
-                $item->book->decrement('stock', $item->quantity);
+            // Calculate admin tax (10%)
+            $adminTax = $order->total_price * 0.10;
+            $finalTotal = $order->total_price + $adminTax;
 
-                // Trigger BookUpdated event for each book
-                event(new BookUpdated($item->book));
-            }
-
+            // Update order with address and final total
             $order->update([
                 'status' => 'pending',
+                'address' => $request->address ? $request->address : Auth::user()->address,
+                'total_price' => $finalTotal,
             ]);
 
 
+            // Decrement stock for all items
+            foreach ($order->orderItems as $item) {
+                $item->book->decrement('stock', $item->quantity);
+            }
+            event(new BookUpdated($item->book));
 
             return Redirect::route('dashboard')
                 ->with('success', 'Order completed successfully!');

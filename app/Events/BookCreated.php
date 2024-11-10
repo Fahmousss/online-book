@@ -20,6 +20,11 @@ class BookCreated implements ShouldBroadcast
         return [new Channel('books')];
     }
 
+    public function broadcastAs(): string
+    {
+        return 'book.created';
+    }
+
     public function broadcastWith(): array
     {
         return [

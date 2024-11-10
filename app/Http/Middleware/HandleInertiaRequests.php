@@ -48,7 +48,8 @@ class HandleInertiaRequests extends Middleware
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
-            'recommendedBooks' => Book::with('author')
+            'recommendedBooks' => Book::withTrashed()
+                ->with('author')
                 ->inRandomOrder()
                 ->limit(6)
                 ->get(),

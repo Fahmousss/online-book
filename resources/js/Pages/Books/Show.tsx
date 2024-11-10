@@ -27,6 +27,7 @@ interface Book {
     categories: {
         name: string;
     }[];
+    deleted_at: string | null;
 }
 
 export default function Show({
@@ -85,7 +86,7 @@ export default function Show({
                 console.error("Echo connection error:", error);
             });
 
-        channel.listen("BookUpdated", (e: { book: Book }) => {
+        channel.listen(".book.updated", (e: { book: Book }) => {
             console.log(e);
             setBooks((currentBooks) =>
                 currentBooks.map((books) =>
@@ -110,7 +111,7 @@ export default function Show({
                             src={
                                 books[0].images
                                     ? `/storage/${books[0].images}`
-                                    : `https://via.placeholder.com/400x600/?text=${books[0].title}`
+                                    : `/storage/logo.png`
                             }
                             loading="lazy"
                             alt={books[0].title}
@@ -168,7 +169,7 @@ export default function Show({
                                 src={
                                     books[0].images
                                         ? `/storage/${books[0].images}`
-                                        : `https://via.placeholder.com/400x600/000000/FFFFFF/?text=${books[0].title}`
+                                        : `/storage/logo.png`
                                 }
                                 alt={books[0].title}
                                 loading="lazy"
@@ -198,7 +199,7 @@ export default function Show({
                                 </div>
                             </div>
                         </div>
-                        {books[0].stock > 0 ? (
+                        {books[0].deleted_at === null && books[0].stock > 0 ? (
                             <form onSubmit={addToCart}>
                                 <div className="flex flex-row-reverse items-center gap-5 sm:flex-row">
                                     <div className="">
@@ -214,6 +215,7 @@ export default function Show({
                                                     "quantity",
                                                     parseInt(e.target.value)
                                                 );
+                                                clearErrors();
                                             }}
                                         />
                                     </div>
@@ -246,10 +248,12 @@ export default function Show({
                         ) : (
                             <button
                                 disabled
-                                className="h-full rounded-md bg-[#FF2D20] px-6 py-3 mr-6 font-medium text-white text-xs sm:text-xl  flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="h-full rounded-md bg-[#FF2D20] px-6 py-3 mr-6 font-medium text-white text-xs sm:text-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <ShoppingCartIcon className="w-4 h-4 sm:w-6 sm:h-6" />
-                                Out of stock
+                                {books[0].deleted_at
+                                    ? "Not Available"
+                                    : "Out of stock"}
                             </button>
                         )}
                     </div>
@@ -265,14 +269,18 @@ export default function Show({
                             <Link
                                 key={recommendedBook.slug}
                                 href={`/books/${recommendedBook.slug}`}
-                                className="overflow-hidden transition-all bg-white rounded-lg shadow-md hover:shadow-inner hover:bg-gray-700 dark:bg-gray-800 "
+                                className={`overflow-hidden transition-all bg-white rounded-lg shadow-md hover:shadow-inner hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 ${
+                                    recommendedBook.deleted_at
+                                        ? "opacity-60"
+                                        : ""
+                                }`}
                             >
                                 <div className="p-5">
                                     <img
                                         src={
                                             recommendedBook.images
                                                 ? `/storage/${recommendedBook.images}`
-                                                : `https://via.placeholder.com/400x600/000000/FFFFFF/?text=${recommendedBook.title}`
+                                                : `/storage/logo.png`
                                         }
                                         alt={recommendedBook.title}
                                         loading="lazy"
@@ -291,9 +299,12 @@ export default function Show({
                                             ${recommendedBook.price}
                                         </span>
                                     </div>
-                                    {recommendedBook.stock === 0 && (
+                                    {(recommendedBook.stock === 0 ||
+                                        recommendedBook.deleted_at) && (
                                         <p className="text-xs text-red-500">
-                                            Out of stock
+                                            {recommendedBook.deleted_at
+                                                ? "Not Available"
+                                                : "Out of stock"}
                                         </p>
                                     )}
                                 </div>

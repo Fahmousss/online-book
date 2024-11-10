@@ -17,7 +17,7 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'isAdmin' => Auth::check() && Auth::user()->roles->pluck('name')->contains('admin'),
         'books' => [
-            'data' => Book::with(['author:id,name', 'categories:id,name'])->orderBy('created_at', 'desc')->get(),
+            'data' => Book::withTrashed()->with(['author:id,name', 'categories:id,name'])->orderBy('created_at', 'desc')->get(),
             'current_page' => 1,
             'last_page' => 1,
             'per_page' => 14,
@@ -36,7 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/books/{slug}', [OrderController::class, 'store'])->name('books.addToCart');
-    Route::patch('/orders/{orderId}', [OrderController::class, 'checkout'])->name('orders.checkout');
+    Route::get('/orders/{orderId}', [OrderController::class, 'checkout'])->name('orders.checkout');
     Route::patch('/orders/{orderId}/pay', [OrderController::class, 'pay'])->name('orders.pay');
     Route::patch('/orders/{orderId}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
     Route::delete('/orders/{orderId}', [OrderController::class, 'destroy'])->name('orders.removeOrder');

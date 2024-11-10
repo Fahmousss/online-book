@@ -62,8 +62,8 @@ class OrdersPolicy
             return false;
         }
 
-        // Check if order is less than 1 hour old
-        return $orders->created_at->diffInHours(now()) < 1;
+        // Check if order is less than 1 day old
+        return $orders->created_at->diffInHours(now()) < 1 || $orders->status === 'cart';
     }
 
     /**
@@ -81,8 +81,8 @@ class OrdersPolicy
             return false;
         }
 
-        // Check if order is less than 1 hour old
-        return $orders->created_at->diffInHours(now()) < 1;
+        // Check if order is less than 1 day old
+        return $orders->created_at->diffInHours(now()) < 1 || $orders->status === 'cart';
     }
 
     /**
