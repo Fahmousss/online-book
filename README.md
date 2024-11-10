@@ -1,6 +1,27 @@
-# Bookstore Project
+# Online Book Store Project
 
-A Laravel-based online bookstore application with real-time updates using Laravel Echo and Pusher.
+This project is a homework assignment for Rakamin Academy, implementing an online bookstore web application. The system allows users to browse and purchase books while providing administrators with tools to manage inventory and orders.
+
+Key Features:
+
+-   User authentication and authorization
+-   Book catalog with search and filtering capabilities
+-   Shopping cart functionality
+-   Real-time stock updates using Laravel WebSockets
+-   Order management system
+-   Admin dashboard for inventory control
+-   Responsive design using Tailwind CSS
+-   Built with Laravel 11 and React + TypeScript
+
+The application demonstrates full-stack development skills including:
+
+-   Backend development with Laravel
+-   Frontend development with React and TypeScript
+-   Real-time updates with WebSockets
+-   Database design and management
+-   Authentication and authorization
+-   RESTful API development
+-   UI/UX implementation
 
 ## Prerequisites
 
@@ -8,15 +29,14 @@ A Laravel-based online bookstore application with real-time updates using Larave
 -   Composer
 -   Node.js & NPM
 -   MySQL
--   Pusher account for real-time features
 
 ## Installation Steps
 
 1. Clone the repository
 
 ```bash
-git clone <repository-url>
-cd bookstore-project
+git clone https://github.com/Fahmousss/online-book.git
+cd online-book
 ```
 
 2. Install dependencies and Build Assets
